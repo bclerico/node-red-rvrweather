@@ -1,0 +1,474 @@
+[
+    {
+        "id": "5c70f825.2e9988",
+        "type": "tab",
+        "label": "Driver",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "4956857d.09979c",
+        "type": "tab",
+        "label": "Current Conditions",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "d94d0e73.ac26d",
+        "type": "tab",
+        "label": "Forecast",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "5b53ce77.76277",
+        "type": "debug",
+        "z": "4956857d.09979c",
+        "name": "dbug1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 502,
+        "y": 145,
+        "wires": []
+    },
+    {
+        "id": "9e2ef181.8e1fd",
+        "type": "function",
+        "z": "4956857d.09979c",
+        "name": "Format Current Conditions",
+        "func": "//get date and time of current location and store in context\nvar curr_location = msg.payload.location;\nvar curr_dto = new Date((msg.data.dt + global.get(\"tz_offset\")) * 1000);\n\nvar curr_mmdd = (curr_dto.getMonth()+1) + \"/\" + curr_dto.getDate();\nvar curr_time = curr_dto.getHours() + \":\";\nvar curr_mm = curr_dto.getMinutes();\ncurr_mm = \"0\" + curr_mm;\ncurr_time = curr_time + curr_mm.slice(-2);\n\nvar tempf = Math.round((msg.payload.tempc * (9/5)) + 32);\nvar press = (msg.payload.pressure / 33.864).toFixed(2);\nvar hum = msg.payload.humidity;\n\nmsg.payload = \"*Current conditions* on \" + curr_mmdd + \" at \" + curr_time +\" in \" + curr_location + \" are _\" + msg.payload.weather;\nmsg.payload = msg.payload + \" with a temperature of \" + tempf + \", humidity at \" + hum +\"%\";\nmsg.payload = msg.payload + \", and barometric pressure of \" + press + \"._\\n\";\n\nif (global.get(\"debug\"))\n    return [msg, null];\n\nreturn [null, msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 546,
+        "y": 320,
+        "wires": [
+            [
+                "1c351510.c507eb",
+                "62059fc0.da6ee"
+            ],
+            [
+                "75f7e602.fa2068"
+            ]
+        ]
+    },
+    {
+        "id": "1c351510.c507eb",
+        "type": "debug",
+        "z": "4956857d.09979c",
+        "name": "dbug2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 681,
+        "y": 246,
+        "wires": []
+    },
+    {
+        "id": "62059fc0.da6ee",
+        "type": "slack",
+        "z": "4956857d.09979c",
+        "name": "Post to #testing",
+        "channelURL": "https://hooks.slack.com/services/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",
+        "username": "",
+        "emojiIcon": "",
+        "channel": "",
+        "x": 823,
+        "y": 352,
+        "wires": []
+    },
+    {
+        "id": "c0b3ec8f.cd9",
+        "type": "function",
+        "z": "d94d0e73.ac26d",
+        "name": "Format Forecast",
+        "func": "var str = \"*Forecast:*\\n\";\nvar days = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\nvar times = [\"12am\", \"1am\", \"2am\", \"3am\", \"4am\", \"5am\", \"6am\", \"7am\", \"8am\", \"9am\", \"10am\", \"11am\", \"12pm\", \"1pm\", \"2pm\", \"3pm\", \"4pm\", \"5pm\", \"6pm\", \"7pm\", \"8pm\", \"9pm\", \"10pm\", \"11pm\"];\nvar p = 1;\nvar incr = msg.payload.length;\n\nif (!global.get(\"six_hour_increments\"))\n    incr = incr - 16;\n\nfor (x=0; x<incr; x++){\n    if (p) {\n        var dto = new Date((msg.payload[x].dt + global.get(\"tz_offset\"))*1000);\n        str = str + \" \" + days[dto.getDay()] + \" \" + times[dto.getHours()] + \" \";\n        str = str + msg.payload[x].weather[0].main + \" (\" + msg.payload[x].weather[0].description + \") ...\";\n        str = str + Math.round((msg.payload[x].main.temp * 9/5) + 32) + \"\\n\";\n        \n        if (global.get(\"six_hour_increments\"))\n            p = 0;\n    }\n    else {\n        p = 1;\n    }\n}\n\nmsg.payload = str;\n\nif (global.get(\"debug\"))\n    return [msg, null];\n    \nreturn [null, msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 502,
+        "y": 387,
+        "wires": [
+            [
+                "d21e8def.e6a67",
+                "7dfc733a.43ebac"
+            ],
+            [
+                "59dc097.c23f4f8",
+                "e8a35d69.81176"
+            ]
+        ]
+    },
+    {
+        "id": "d21e8def.e6a67",
+        "type": "debug",
+        "z": "d94d0e73.ac26d",
+        "name": "5 day debug3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 740,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "33027a44.2b2206",
+        "type": "debug",
+        "z": "d94d0e73.ac26d",
+        "name": "5 day debug2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 535,
+        "y": 231,
+        "wires": []
+    },
+    {
+        "id": "7dfc733a.43ebac",
+        "type": "slack",
+        "z": "d94d0e73.ac26d",
+        "name": "post to #testing",
+        "channelURL": "https://hooks.slack.com/services/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",
+        "username": "",
+        "emojiIcon": "",
+        "channel": "",
+        "x": 789,
+        "y": 449,
+        "wires": []
+    },
+    {
+        "id": "59dc097.c23f4f8",
+        "type": "slack",
+        "z": "d94d0e73.ac26d",
+        "name": "post to #general",
+        "channelURL": "https://hooks.slack.com/services/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",
+        "username": "",
+        "emojiIcon": "",
+        "channel": "",
+        "x": 795,
+        "y": 528,
+        "wires": []
+    },
+    {
+        "id": "2745cabf.214476",
+        "type": "link in",
+        "z": "d94d0e73.ac26d",
+        "name": "RVR 3 Day Forecast",
+        "links": [
+            "2204be79.40c292",
+            "e10c4a3e.c27208",
+            "df7b2be7.2aa8b8"
+        ],
+        "x": 79,
+        "y": 74,
+        "wires": [
+            [
+                "6df28e2a.af817"
+            ]
+        ]
+    },
+    {
+        "id": "538a1ae3.507934",
+        "type": "link in",
+        "z": "4956857d.09979c",
+        "name": "RVR Current Conditions",
+        "links": [
+            "af70ee4d.b6b91",
+            "fbc5ce7d.4bc6f"
+        ],
+        "x": 80,
+        "y": 68,
+        "wires": [
+            [
+                "d0bee57.def7318"
+            ]
+        ]
+    },
+    {
+        "id": "75f7e602.fa2068",
+        "type": "slack",
+        "z": "4956857d.09979c",
+        "name": "post to #general",
+        "channelURL": "https://hooks.slack.com/services/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",
+        "username": "",
+        "emojiIcon": "",
+        "channel": "",
+        "x": 822,
+        "y": 490,
+        "wires": []
+    },
+    {
+        "id": "d0bee57.def7318",
+        "type": "function",
+        "z": "4956857d.09979c",
+        "name": "Set the location",
+        "func": "msg.location = {lat:global.get(\"lat\"), lon:global.get(\"lon\")};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 200,
+        "y": 173,
+        "wires": [
+            [
+                "5eb37d0.979f184",
+                "2044bc82.5b9474"
+            ]
+        ]
+    },
+    {
+        "id": "6df28e2a.af817",
+        "type": "function",
+        "z": "d94d0e73.ac26d",
+        "name": "Set the location",
+        "func": "msg.location = {lat:global.get(\"lat\"), lon:global.get(\"lon\")};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 217,
+        "y": 151,
+        "wires": [
+            [
+                "e5711136.9dd8e",
+                "caf74c78.b2b71"
+            ]
+        ]
+    },
+    {
+        "id": "2044bc82.5b9474",
+        "type": "debug",
+        "z": "4956857d.09979c",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 306,
+        "y": 99,
+        "wires": []
+    },
+    {
+        "id": "faeb4b6e.bfd2d8",
+        "type": "inject",
+        "z": "5c70f825.2e9988",
+        "name": "Zulu Time",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "00 16 * * *",
+        "once": false,
+        "onceDelay": "60",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "3f8d21cb.05e96e"
+            ]
+        ]
+    },
+    {
+        "id": "3f8d21cb.05e96e",
+        "type": "function",
+        "z": "5c70f825.2e9988",
+        "name": "global context",
+        "func": "global.set(\"debug\", 0); //0= send to #general; 1= send to #testing\n\n//global.set(\"lat\", 40.33);  // Lincroft\n//global.set(\"lon\", -74.12);  // Lincroft\n//global.set(\"tz_offset\", (-5 * 60 * 60));\n\nglobal.set(\"lat\", 39.074);  // RVR\nglobal.set(\"lon\", -123.415);  // RVR\nglobal.set(\"tz_offset\", (-8 * 60 * 60));\nglobal.set(\"six_hour_increments\", 0);\n\nreturn [msg, msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 360,
+        "y": 140,
+        "wires": [
+            [
+                "fbc5ce7d.4bc6f"
+            ],
+            [
+                "d73be227.0fa33"
+            ]
+        ],
+        "outputLabels": [
+            "#testing",
+            ""
+        ]
+    },
+    {
+        "id": "fbc5ce7d.4bc6f",
+        "type": "link out",
+        "z": "5c70f825.2e9988",
+        "name": "",
+        "links": [
+            "538a1ae3.507934"
+        ],
+        "x": 735,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "d73be227.0fa33",
+        "type": "delay",
+        "z": "5c70f825.2e9988",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 560,
+        "y": 200,
+        "wires": [
+            [
+                "df7b2be7.2aa8b8"
+            ]
+        ]
+    },
+    {
+        "id": "df7b2be7.2aa8b8",
+        "type": "link out",
+        "z": "5c70f825.2e9988",
+        "name": "",
+        "links": [
+            "2745cabf.214476"
+        ],
+        "x": 735,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "a9142343.00c9",
+        "type": "Slack Bot In",
+        "z": "5c70f825.2e9988",
+        "name": "The Ranch Hand",
+        "apiToken": "xoxb-427694782002-501102423476-2WehYN9IeRCGwcydcwVioOPw",
+        "channel": "general",
+        "x": 140,
+        "y": 260,
+        "wires": [
+            [
+                "60290243.c347dc",
+                "4360d55.140192c"
+            ]
+        ]
+    },
+    {
+        "id": "60290243.c347dc",
+        "type": "function",
+        "z": "5c70f825.2e9988",
+        "name": "Check for \"rvrweather\"",
+        "func": "var str = msg.payload.toLowerCase();\nif (str.search(\"rvrweather\") > -1)\n    return msg;\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 320,
+        "wires": [
+            [
+                "96e0e24d.98e0c",
+                "3f8d21cb.05e96e"
+            ]
+        ]
+    },
+    {
+        "id": "96e0e24d.98e0c",
+        "type": "debug",
+        "z": "5c70f825.2e9988",
+        "name": "debug2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 540,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "caf74c78.b2b71",
+        "type": "debug",
+        "z": "d94d0e73.ac26d",
+        "name": "5 day debug1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 480,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "e8a35d69.81176",
+        "type": "debug",
+        "z": "d94d0e73.ac26d",
+        "name": "5 day debug4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 690,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "5eb37d0.979f184",
+        "type": "openweathermap",
+        "z": "4956857d.09979c",
+        "name": "Current Conditions",
+        "wtype": "current",
+        "lon": "",
+        "lat": "",
+        "city": "",
+        "country": "",
+        "language": "en",
+        "x": 386,
+        "y": 222,
+        "wires": [
+            [
+                "5b53ce77.76277",
+                "9e2ef181.8e1fd"
+            ]
+        ]
+    },
+    {
+        "id": "e5711136.9dd8e",
+        "type": "openweathermap",
+        "z": "d94d0e73.ac26d",
+        "name": "Five Day",
+        "wtype": "forecast",
+        "lon": "",
+        "lat": "",
+        "city": "",
+        "country": "",
+        "language": "en",
+        "x": 265,
+        "y": 269,
+        "wires": [
+            [
+                "33027a44.2b2206",
+                "c0b3ec8f.cd9"
+            ]
+        ]
+    },
+    {
+        "id": "4360d55.140192c",
+        "type": "debug",
+        "z": "5c70f825.2e9988",
+        "name": "debug1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 270,
+        "y": 400,
+        "wires": []
+    }
+]
